@@ -5,6 +5,7 @@ Esta é uma configuração do Docker Compose para trabalho de desenvolvimento us
 * FORKED de:
 
   * [https://github.com/tolitius/cault](https://github.com/tolitius/cault)
+  * [https://github.com/spkane/vault-local-dev](https://github.com/spkane/vault-local-dev)
 
 ## Iniciando Consul e Vault
 
