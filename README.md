@@ -423,3 +423,165 @@ docker rm $(docker ps -a -q)
 Copyright © 2019 tolitius
 
 Distribuído sob a Eclipse Public License, versão 1.0 ou (a seu critério) qualquer versão posterior.
+
+
+### Aqui está uma versão organizada com todos os comandos
+
+---
+
+# Vault para Desenvolvimento Local – Comandos Prontos
+
+## 1. Configuração Inicial e Subida dos Containers
+
+```bash
+# Configura o endereço do Vault e o caminho do CA
+export VAULT_ADDR='https://127.0.0.1:8200'
+export VAULT_CAPATH="${PWD}/certs/ca.crt"
+
+# Sobe os containers de Vault e Consul
+docker compose up -d
+
+# Acesso às UIs
+# Vault UI: https://127.0.0.1:8200/ui
+# Consul UI: http://127.0.0.1:8500/ui
+```
+
+---
+
+## 2. Login na Imagem do Vault
+
+```bash
+docker exec -it cault_vault_1 sh
+```
+
+Verifique o status do Vault:
+
+```bash
+vault status
+```
+
+---
+
+## 3. Inicializando o Vault
+
+```bash
+vault operator init
+```
+
+> **Atenção:** anote os 5 `Unseal Keys` e o `Initial Root Token`.
+
+---
+
+## 4. Deslacrando o Vault (3 vezes com 3 chaves diferentes)
+
+```bash
+vault operator unseal  # insira Unseal Key 1
+vault operator unseal  # insira Unseal Key 2
+vault operator unseal  # insira Unseal Key 3
+```
+
+Verifique que `Sealed` agora é `false`.
+
+---
+
+## 5. Autenticação no Vault
+
+```bash
+vault login
+# insira o Initial Root Token
+```
+
+---
+
+## 6. Alias para facilitar o uso do Vault fora da imagem
+
+```bash
+alias vault='docker exec -it cault_vault_1 vault "$@"'
+```
+
+---
+
+## 7. Monitorando logs do Consul
+
+```bash
+docker logs cault_consul_1 -f
+```
+
+---
+
+## 8. Escrevendo e Lendo Secrets no Vault
+
+```bash
+# Escrevendo secret no cubbyhole
+vault write -address=http://127.0.0.1:8200 cubbyhole/billion-dollars value=behind-super-secret-password
+
+# Lendo secret
+vault read cubbyhole/billion-dollars
+```
+
+---
+
+## 9. Response Wrapping – System Backend
+
+```bash
+# Exporta variáveis do Vault
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC
+
+# Cria arquivo de credenciais
+cat > creds.json <<EOF
+{"username": "ceo", "password": "behind-super-secret-password"}
+EOF
+
+# Gera token de uso único
+token=$(./tools/vault/wrap-token.sh creds.json)
+echo $token
+
+# Desembrulha o token
+./tools/vault/unwrap-token.sh $token
+
+# Tentativa de usar o token novamente falha
+./tools/vault/unwrap-token.sh $token
+```
+
+---
+
+## 10. Cubbyhole Backend
+
+```bash
+# Exporta variáveis do Vault
+export VAULT_ADDR=http://127.0.0.1:8200
+export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC
+
+# Cria token de uso único para cubbyhole
+token=$(./tools/vault/cubbyhole-wrap-token.sh /cubbyhole/billion-dollars)
+echo $token
+
+# Acessa secret via token
+curl -s -H "X-Vault-Token: $token" -X GET $VAULT_ADDR/v1/cubbyhole/response
+
+# Tentativa de usar o token novamente falha
+curl -s -H "X-Vault-Token: $token" -X GET $VAULT_ADDR/v1/cubbyhole/response
+```
+
+---
+
+## 11. Backup e Restore do Consul (opcional)
+
+```bash
+# Backup
+consul snapshot save backups/vault-consul-backup-$(date +%Y%m%d%H%M).snap
+
+# Restore
+consul snapshot restore ./backups/vault-consul-backup-202110021214.snap
+```
+
+---
+
+## 12. Solução de Problemas – Imagens antigas
+
+```bash
+docker rm $(docker ps -a -q)  # Remove containers parados
+```
+
+
