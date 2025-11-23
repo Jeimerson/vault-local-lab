@@ -1,11 +1,12 @@
-# Vault for Local Development
+# Vault para Desenvolvimento Local
 
-This is a docker compose setup for development work using Vault and Consul.
+Esta é uma configuração do Docker Compose para trabalho de desenvolvimento usando Vault e Consul.
 
-* FORKED from:
-    * https://github.com/tolitius/cault
+* FORKED de:
 
-## Start Consul and Vault
+  * [https://github.com/tolitius/cault](https://github.com/tolitius/cault)
+
+## Iniciando Consul e Vault
 
 ```
 export VAULT_ADDR='https://127.0.0.1:8200'
@@ -16,86 +17,97 @@ docker compose up -d
 * [Vault UI](https://127.0.0.1:8200/ui)
 * [Consul UI](http://127.0.0.1:8500/ui)
 
-## Getting Vault Ready
+## Preparando o Vault
 
-* **NOTE**: It is a good idea to use the same version of the vault CLI as we are using for the vault server!
+* **NOTA**: É uma boa prática usar a mesma versão do CLI do Vault que estamos usando para o servidor Vault!
 
 ### Bootstrap
 
-You can Bootstrap Vault via the [Vault UI](https://127.0.0.1:8200/ui) or the command line.
+Você pode inicializar o Vault via [Vault UI](https://127.0.0.1:8200/ui) ou linha de comando.
 
-### Command Line
+### Linha de Comando
 
-* Run `vault operator init` to create the unseal keys and initial root token.
-  * If you see `* Vault is already initialized` then you have done this already.
-  * Take a note of these! If you lose, you will need to start again.
-* Run `vault operator unseal` three times in a row, giving Vault a different one of the 5 unseal keys.
-  * The output will contain a line that starts with `Unseal Progress`. You want this line to completely go away and for the line `Sealed` to read `false`.
-* After vault is unsealed, run `vault login` with the Initial Root Token that you got after running `vault operator init` earlier.
+* Execute `vault operator init` para criar as chaves de unseal e o token root inicial.
+
+  * Se você ver `* Vault is already initialized`, significa que já fez isso antes.
+  * Anote estas informações! Se perder, precisará reiniciar o processo.
+* Execute `vault operator unseal` três vezes seguidas, fornecendo ao Vault uma das 5 chaves de unseal diferentes.
+
+  * A saída conterá uma linha que começa com `Unseal Progress`. Você quer que essa linha desapareça completamente e que a linha `Sealed` mostre `false`.
+* Após o Vault ser deslacrado (unsealed), execute `vault login` com o Token Root Inicial obtido ao executar `vault operator init` anteriormente.
 
 ### Backup & Restore
 
-* **NOTE**: This container does not persist ANY data as the consul node is in dev mode.
+* **NOTA**: Este container não persiste NENHUM dado, pois o nó do Consul está em modo dev.
 
-* `docker compose pause` and `docker compose unpause` are the only ways that you can stop the containers from running and still keep the data around without backing up and restoring the data. This does not survive a reboot, meaning you will need to restore and unseal after containers stop.
+* `docker compose pause` e `docker compose unpause` são as únicas maneiras de parar os containers sem perder os dados, sem necessidade de backup. Isso não sobrevive a um reboot, então você precisará restaurar e deslacrar após os containers pararem.
 
 #### Backup
 
-* If you want to save the data for later use, install the consul client locally and then try:
+* Para salvar os dados para uso posterior, instale o cliente Consul localmente e execute:
+
   * `consul snapshot save backups/vault-consul-backup-$(date +%Y%m%d%H%M).snap`
 
 #### Restore
 
-* You can then restore with something like this:
+* Para restaurar, use algo como:
+
   * `consul snapshot restore ./backups/vault-consul-backup-202110021214.snap`
 
-## README from forked repo:
+## README do repositório forked:
 
-Consul and Vault are started together in two separate, but linked, docker containers.
+Consul e Vault são iniciados juntos em dois containers Docker separados, mas ligados.
 
-Vault is configured to use a `consul` [secret backend](https://www.vaultproject.io/docs/secrets/consul/).
+Vault é configurado para usar um [backend de secrets do Consul](https://www.vaultproject.io/docs/secrets/consul/).
 
 ---
 
-- [Vault for Local Development](#vault-for-local-development)
-  - [Start Consul and Vault](#start-consul-and-vault)
-  - [Getting Vault Ready](#getting-vault-ready)
-    - [Bootstrap](#bootstrap)
-    - [Command Line](#command-line)
-    - [Backup & Restore](#backup--restore)
-      - [Backup](#backup)
-      - [Restore](#restore)
-  - [README from forked repo:](#readme-from-forked-repo)
-  - [Start Consul and Vault](#start-consul-and-vault-1)
-  - [Getting Vault Ready](#getting-vault-ready-1)
-    - [Init Vault](#init-vault)
-    - [Unsealing Vault](#unsealing-vault)
-    - [Auth with Vault](#auth-with-vault)
-  - [Making sure it actually works](#making-sure-it-actually-works)
-    - [Watch Consul logs](#watch-consul-logs)
-    - [Writing / Reading Secrets](#writing--reading-secrets)
-    - [Response Wrapping](#response-wrapping)
-      - [System backend](#system-backend)
-      - [Cubbyhole backend](#cubbyhole-backend)
-  - [Troubleshooting](#troubleshooting)
-    - [Bad Image Caches](#bad-image-caches)
-  - [License](#license)
+* [Vault para Desenvolvimento Local](#vault-para-desenvolvimento-local)
 
-## Start Consul and Vault
+  * [Iniciando Consul e Vault](#iniciando-consul-e-vault)
+  * [Preparando o Vault](#preparando-o-vault)
+
+    * [Bootstrap](#bootstrap)
+    * [Linha de Comando](#linha-de-comando)
+    * [Backup & Restore](#backup--restore)
+
+      * [Backup](#backup)
+      * [Restore](#restore)
+  * [README do repositório forked:](#readme-do-repositorio-forked)
+  * [Iniciando Consul e Vault](#iniciando-consul-e-vault-1)
+  * [Preparando o Vault](#preparando-o-vault-1)
+
+    * [Inicializando o Vault](#inicializando-o-vault)
+    * [Deslacrando o Vault](#deslacrando-o-vault)
+    * [Autenticação no Vault](#autenticacao-no-vault)
+  * [Verificando se realmente funciona](#verificando-se-realmente-funciona)
+
+    * [Acompanhar logs do Consul](#acompanhar-logs-do-consul)
+    * [Escrevendo / Lendo Secrets](#escrevendo--lendo-secrets)
+    * [Response Wrapping](#response-wrapping)
+
+      * [System backend](#system-backend)
+      * [Cubbyhole backend](#cubbyhole-backend)
+  * [Solução de Problemas](#solucao-de-problemas)
+
+    * [Caches de Imagens Ruins](#caches-de-imagens-ruins)
+  * [License](#license)
+
+## Iniciando Consul e Vault
 
 ```bash
 docker-compose up -d
 ```
 
-## Getting Vault Ready
+## Preparando o Vault
 
-Login to the Vault image:
+Login na imagem do Vault:
 
 ```bash
 docker exec -it cault_vault_1 sh
 ```
 
-Check Vault's status:
+Verifique o status do Vault:
 
 ```bash
 $ vault status
@@ -112,11 +124,11 @@ Version            n/a
 HA Enabled         true
 ```
 
-Because Vault is not yet initialized (`Initialized  false`), it is sealed (`Sealed  true`), that's why Consul will show you a sealed critial status:
+Como o Vault ainda não está inicializado (`Initialized  false`), ele está lacrado (`Sealed  true`), por isso o Consul mostrará status crítico lacrado:
 
 <p align="center"><img src="doc/img/sealed-vault.png"></p>
 
-### Init Vault
+### Inicializando o Vault
 
 ```bash
 $ vault operator init
@@ -140,13 +152,13 @@ It is possible to generate new unseal keys, provided you have a quorum of
 existing unseal keys shares. See "vault operator rekey" for more information.
 ```
 
-notice Vault says:
+Repare que o Vault diz:
 
-> you must provide at least 3 of these keys to unseal it again
+> você deve fornecer pelo menos 3 dessas chaves para deslacrar novamente
 
-hence it needs to be unsealed 3 times with 3 different keys (out of the 5 above)
+Portanto, ele precisa ser deslacrado 3 vezes com 3 chaves diferentes (das 5 acima).
 
-### Unsealing Vault
+### Deslacrando o Vault
 
 ```bash
 $ vault operator unseal
@@ -176,13 +188,13 @@ Sealed                 false
 Active Node Address    <none>
 ```
 
-the Vault is now unsealed:
+O Vault agora está deslacrado:
 
 <p align="center"><img src="doc/img/unsealed-vault.png"></p>
 
-### Auth with Vault
+### Autenticação no Vault
 
-We can use the `Initial Root Token` from above to auth with the Vault:
+Podemos usar o `Initial Root Token` acima para autenticar no Vault:
 
 ```bash
 $ vault login
@@ -204,84 +216,86 @@ policies             ["root"]
 
 ---
 
-All done: now you have both Consul and Vault running side by side.
+Tudo pronto: agora você tem Consul e Vault rodando lado a lado.
 
-## Making sure it actually works
+## Verificando se realmente funciona
 
-From the host environment (i.e. outside of the docker image):
+Do ambiente host (ou seja, fora da imagem Docker):
 
 ```bash
 alias vault='docker exec -it cault_vault_1 vault "$@"'
 ```
 
-This will allow to run `vault` commands without a need to login to the image.
+Isso permitirá rodar comandos `vault` sem precisar logar na imagem.
 
-> the reason commands will work is because you just `auth`'ed (logged into Vault) with a root token inside the image in the previous step.
+> O motivo pelo qual os comandos funcionarão é que você acabou de se autenticar com um token root dentro da imagem no passo anterior.
 
-### Watch Consul logs
+### Acompanhar logs do Consul
 
-In one terminal tail Consul logs:
+Em um terminal, acompanhe os logs do Consul:
 
 ```bash
 $ docker logs cault_consul_1 -f
 ```
 
-### Writing / Reading Secrets
+### Escrevendo / Lendo Secrets
 
-In the other terminal run vault commands:
+No outro terminal, rode comandos do Vault:
 
 ```bash
 $ vault write -address=http://127.0.0.1:8200 cubbyhole/billion-dollars value=behind-super-secret-password
 ```
+
 ```
 Success! Data written to: cubbyhole/billion-dollars
 ```
 
-Check the Consul log, you should see something like:
+Confira o log do Consul, você verá algo como:
 
 ```bash
 2016/12/28 06:52:09 [DEBUG] http: Request PUT /v1/kv/vault/logical/a77e1d7f-a404-3439-29dc-34a34dfbfcd2/billion-dollars (199.657µs) from=172.28.0.3:50260
 ```
 
-Let's read it back:
+Vamos ler de volta:
 
 ```bash
 $ vault read cubbyhole/billion-dollars
 ```
+
 ```
 Key             	Value
 ---             	-----
 value           	behind-super-secret-password
 ```
 
-And it is in fact in Consul:
+E de fato está no Consul:
 
 <p align="center"><img src="doc/img/vault-value-in-consul.png"></p>
 
-and in Vault:
+E no Vault:
 
 <p align="center"><img src="doc/img/secret-in-vault-ui.png"></p>
 
-(this is from Vault's own UI that is enabled in this image)
+(isto é da própria UI do Vault que está habilitada nesta imagem)
 
 ### Response Wrapping
 
-> _NOTE: for these examples to work you would need [jq](https://stedolan.github.io/jq/) (i.e. to parse JSON responses from Vault)._
+> *NOTA: para estes exemplos funcionarem, você precisará do [jq](https://stedolan.github.io/jq/) (para parse de respostas JSON do Vault).*
 
-> _`brew install jq` or `apt-get install jq` or similar_
+> *`brew install jq` ou `apt-get install jq` ou similar*
 
 #### System backend
 
-Running with a [System Secret Backend](https://www.vaultproject.io/api/system/index.html).
+Rodando com um [System Secret Backend](https://www.vaultproject.io/api/system/index.html).
 
-Export Vault env vars for the local scripts to work:
+Exporte variáveis do Vault para que scripts locais funcionem:
 
 ```bash
 $ export VAULT_ADDR=http://127.0.0.1:8200
-$ export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC  ### root token you remembered from initializing Vault
+$ export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC  ### token root que você guardou ao inicializar o Vault
 ```
 
-At the root of `cault` project there is `creds.json` file (you can create your own of course):
+Na raiz do projeto `cault` há um arquivo `creds.json` (você pode criar o seu próprio):
 
 ```bash
 $ cat creds.json
@@ -290,8 +304,7 @@ $ cat creds.json
  "password": "behind-super-secret-password"}
 ```
 
-We can write it to a "one time place" in Vault. This one time place will be accessible by a "one time token" Vault will return from a
-`/sys/wrapping/wrap` endpoint:
+Podemos escrever em um "local de uso único" no Vault. Esse local será acessível por um "token de uso único" retornado pelo Vault no endpoint `/sys/wrapping/wrap`:
 
 ```bash
 $ token=`./tools/vault/wrap-token.sh creds.json`
@@ -300,10 +313,9 @@ $ echo $token
 s.sMFwpg8DBYh0NXbXqjLJTNKN
 ```
 
-You can checkout [wrap-token.sh](tools/vault/wrap-token.sh) script, it uses `/sys/wrapping/wrap` Vault's endpoint
-to secretly persist `creds.json` and return a token for it that will be valid for 60 seconds.
+Você pode conferir o script [wrap-token.sh](tools/vault/wrap-token.sh), que usa o endpoint `/sys/wrapping/wrap` do Vault para persistir secretamente `creds.json` e retorna um token válido por 60 segundos.
 
-Now let's use this token to unwrap the secret:
+Agora vamos usar este token para "desembrulhar" o secret:
 
 ```bash
 $ ./tools/vault/unwrap-token.sh $token
@@ -312,48 +324,49 @@ $ ./tools/vault/unwrap-token.sh $token
  "username": "ceo" }
 ```
 
-You can checkout [unwrap-token.sh](tools/vault/unwrap-token.sh) script, it uses `/sys/wrapping/unwrap` Vault's endpoint
+Você pode conferir o script [unwrap-token.sh](tools/vault/unwrap-token.sh), que usa o endpoint `/sys/wrapping/unwrap`.
 
-Let's try to use the same token again:
+Vamos tentar usar o mesmo token novamente:
 
 ```bash
 $ ./tools/vault/unwrap-token.sh $token
 ["wrapping token is not valid or does not exist"]
 ```
 
-i.e. Vault takes `one time` pretty seriously.
+Ou seja, o Vault leva o "uso único" muito a sério.
 
 #### Cubbyhole backend
 
-Running with a [Cubbyhole Secret Backend](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html).
+Rodando com um [Cubbyhole Secret Backend](https://www.vaultproject.io/docs/secrets/cubbyhole/index.html).
 
-Export Vault env vars for the local scripts to work:
+Exporte variáveis do Vault para que scripts locais funcionem:
 
 ```bash
 $ export VAULT_ADDR=http://127.0.0.1:8200
-$ export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC  ### root token you remembered from initializing Vault
+$ export VAULT_TOKEN=s.1ee2zxWvX43sAwjlcDaSGGSC  ### token root que você guardou ao inicializar o Vault
 ```
 
-Create a cubbyhole for the `billion-dollars` secret, and wrap it in a one time use token:
+Crie um cubbyhole para o secret `billion-dollars` e envolva em um token de uso único:
 
 ```bash
 $ token=`./tools/vault/cubbyhole-wrap-token.sh /cubbyhole/billion-dollars`
 ```
 
-let's look at it:
+Vamos olhar:
 
 ```bash
 $ echo $token
 s.T3GT2dGb8bUuJtSEenxnZick
 ```
 
-looks like any other token, but it is in fact a _one time use_ token, only for this cobbyhole.
+Parece um token comum, mas é de *uso único*, apenas para este cubbyhole.
 
-Let's use it:
+Vamos usar:
 
 ```bash
 $ curl -s -H "X-Vault-Token: $token" -X GET $VAULT_ADDR/v1/cubbyhole/response
 ```
+
 ```json
 {
   "request_id": "f0cf41a6-d971-69be-4eee-c7137376a755",
@@ -371,24 +384,25 @@ $ curl -s -H "X-Vault-Token: $token" -X GET $VAULT_ADDR/v1/cubbyhole/response
 }
 ```
 
-_(notice: that "cubbyhole/response" is deprecated, use the `system` backend instead. example is in the section above)_
+*(observe: `cubbyhole/response` está obsoleto, use o backend `system` como no exemplo acima)*
 
-Let's try to use it again:
+Vamos tentar usar novamente:
 
 ```bash
 $ curl -s -H "X-Vault-Token: $token" -X GET $VAULT_ADDR/v1/cubbyhole/response
 ```
+
 ```json
 {"errors":["permission denied"]}
 ```
 
-Vault takes `one time` pretty seriously.
+O Vault leva o "uso único" muito a sério.
 
-## Troubleshooting
+## Solução de Problemas
 
-### Bad Image Caches
+### Caches de Imagens Ruins
 
-In case there are some stale / stopped cached images, you might get connection exceptions:
+Caso existam imagens antigas/paradas em cache, você pode obter exceções de conexão:
 
 ```clojure
 failed to check for initialization: Get v1/kv/vault/core/keyring: dial tcp i/o timeout
@@ -398,7 +412,7 @@ failed to check for initialization: Get v1/kv/vault/core/keyring: dial tcp i/o t
 reconcile unable to talk with Consul backend: error=service registration failed: /v1/agent/service/register
 ```
 
-you can purge stopped images to solve that:
+Você pode limpar imagens paradas para resolver:
 
 ```bash
 docker rm $(docker ps -a -q)
@@ -408,4 +422,4 @@ docker rm $(docker ps -a -q)
 
 Copyright © 2019 tolitius
 
-Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
+Distribuído sob a Eclipse Public License, versão 1.0 ou (a seu critério) qualquer versão posterior.
